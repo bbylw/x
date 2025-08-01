@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>长文转社媒分享图</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;600&family=Lora:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <!-- App CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- html2canvas CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+    <!-- App JS -->
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 左侧控制面板 -->
+        <aside class="sidebar" aria-label="控制面板">
+            <h1 class="app-title">长文转图片</h1>
+
+            <!-- 文本输入 -->
+            <section class="panel-group">
+                <label class="panel-label" for="input-text">输入/粘贴内容</label>
+                <textarea id="input-text" class="text-input" placeholder="在此粘贴你的长文内容……"></textarea>
+            </section>
+
+            <!-- 排版控件 -->
+            <section class="panel-group">
+                <h2 class="group-title">📝 排版</h2>
+
+                <div class="field">
+                    <label for="font-family">字体</label>
+                    <select id="font-family">
+                        <option
+                            value="Inter, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans SC, Arial, sans-serif">
+                            Inter（无衬线）</option>
+                        <option
+                            value="'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+                            Fira Code（等宽）</option>
+                        <option value="Lora, Georgia, 'Times New Roman', Times, serif">Lora（衬线）</option>
+                    </select>
+                </div>
+
+                <div class="field range-field">
+                    <label for="font-size">字号</label>
+                    <input type="range" id="font-size" min="14" max="36" value="20" step="1">
+                    <span id="font-size-val" class="range-value">20px</span>
+                </div>
+
+                <div class="field range-field">
+                    <label for="line-height">行间距</label>
+                    <input type="range" id="line-height" min="1.2" max="2.2" value="1.7" step="0.05">
+                    <span id="line-height-val" class="range-value">1.7</span>
+                </div>
+
+                <div class="field colors">
+                    <div>
+                        <label for="text-color">文字颜色</label>
+                        <input type="color" id="text-color" value="#111111">
+                    </div>
+                    <div>
+                        <label for="bg-color">背景颜色</label>
+                        <input type="color" id="bg-color" value="#ffffff">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 品牌控件 -->
+            <section class="panel-group">
+                <h2 class="group-title">🏷️ 品牌</h2>
+
+                <div class="field">
+                    <label for="logo-upload">上传 Logo</label>
+                    <input type="file" id="logo-upload" accept="image/*">
+                </div>
+
+                <div class="field">
+                    <label for="x-username">X 用户名</label>
+                    <input id="x-username" type="text" placeholder="@your_handle">
+                </div>
+            </section>
+
+            <!-- 模板选择 -->
+            <section class="panel-group">
+                <h2 class="group-title">🎨 模板</h2>
+                <div class="field">
+                    <label for="template">选择模板</label>
+                    <select id="template">
+                        <option value="template-default">默认</option>
+                        <option value="template-code">代码风</option>
+                        <option value="template-letter">信纸风</option>
+                        <option value="template-neon">霓虹渐变</option>
+                        <option value="template-magazine">杂志报头</option>
+                        <option value="template-sticky">卡片便签</option>
+                        <option value="template-glass">玻璃拟态</option>
+                        <option value="template-terminal">VSCode风格</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- 高级设置 -->
+            <section class="panel-group">
+                <h2 class="group-title">⚙️ 高级设置</h2>
+                
+                <div class="field range-field">
+                    <label for="card-width">卡片宽度</label>
+                    <input type="range" id="card-width" min="600" max="1200" value="960" step="20">
+                    <span id="card-width-val" class="range-value">960px</span>
+                </div>
+
+                <div class="field range-field">
+                    <label for="content-padding">内边距</label>
+                    <input type="range" id="content-padding" min="16" max="64" value="32" step="4">
+                    <span id="content-padding-val" class="range-value">32px</span>
+                </div>
+                
+                <div class="field">
+                    <button id="reset-btn" class="secondary-btn">重置所有设置</button>
+                </div>
+            </section>
+
+            <!-- 生成按钮 -->
+            <section class="panel-group">
+                <button id="generate-btn" class="primary-btn">
+                    <span>🖼️ 生成图片并下载</span>
+                </button>
+                <button id="copy-btn" class="secondary-btn" style="margin-top: 8px; width: 100%;">
+                    <span>📋 复制到剪贴板</span>
+                </button>
+            </section>
+
+            <footer class="tip">
+                提示：支持实时预览，生成时会以右侧卡片为准。若图片发虚，可在下方“导出倍率”中增大导出倍率。
+            </footer>
+        </aside>
+
+        <!-- 右侧实时预览 -->
+        <main class="preview-area" aria-label="实时预览">
+            <!-- 预览工具栏 -->
+            <div class="preview-toolbar">
+                <div class="toolbar-left">
+                    <h2>📱 实时预览</h2>
+                </div>
+                <div class="toolbar-right">
+                    <button id="fullscreen-btn" class="icon-btn" title="全屏预览">
+                        <span>⛶</span>
+                    </button>
+                    <button id="zoom-fit-btn" class="icon-btn" title="适应窗口">
+                        <span>⊞</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-card">
+                <!-- 可捕获区域 -->
+                <div id="capture-area" class="template-default">
+                    <div class="content-wrap">
+                        <div id="content-text" class="content-text">
+                            在左侧输入你的内容，右侧将实时更新预览。
+                        </div>
+                    </div>
+                    <div class="brand-footer">
+                        <div class="brand-left">
+                            <img id="brand-logo" class="brand-logo" alt="品牌Logo" />
+                            <span id="brand-name" class="brand-name">@your_handle</span>
+                        </div>
+                        <div class="brand-right">
+                            <span class="brand-mark">Share • Create • Inspire</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导出参数 -->
+            <div class="export-controls">
+                <div class="export-row">
+                    <label for="export-scale">导出倍率（清晰度）</label>
+                    <input type="range" id="export-scale" min="1" max="4" step="1" value="3">
+                    <span id="export-scale-val" class="range-value">3x</span>
+                </div>
+                
+                <div class="export-row">
+                    <label for="export-format">导出格式</label>
+                    <select id="export-format">
+                        <option value="png">PNG（推荐）</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+                
+                <div class="export-info">
+                    <span id="image-dimensions">预计尺寸：2880 × 1620px</span>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>
