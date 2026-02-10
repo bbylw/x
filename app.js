@@ -27,6 +27,20 @@ const contentPaddingVal = $('#content-padding-val');
 const imageDimensions = $('#image-dimensions');
 const fullscreenBtn = $('#fullscreen-btn');
 const zoomFitBtn = $('#zoom-fit-btn');
+const templateStatus = $('#template-status');
+const contentStats = $('#content-stats');
+const templateChips = $$('#template-gallery .template-chip');
+
+const templateLabels = {
+  'template-default': '默认',
+  'template-code': '代码风',
+  'template-letter': '信纸风',
+  'template-neon': '霓虹渐变',
+  'template-magazine': '杂志报头',
+  'template-sticky': '卡片便签',
+  'template-glass': '玻璃拟态',
+  'template-terminal': 'VSCode风格'
+};
 
 // 预览区域
 const captureArea = $('#capture-area');
@@ -145,11 +159,30 @@ function updateImageDimensions() {
   const finalHeight = height * scale;
   imageDimensions.textContent = `预计尺寸：${finalWidth} × ${finalHeight}px`;
 }
+
+function updateTemplateSelector(templateClass) {
+  templateChips.forEach((chip) => {
+    const isActive = chip.dataset.template === templateClass;
+    chip.classList.toggle('active', isActive);
+    chip.setAttribute('aria-checked', String(isActive));
+  });
+  const label = templateLabels[templateClass] || '默认';
+  templateStatus.textContent = `当前模板：${label}`;
+}
+
+function updateContentStats(text) {
+  const normalizedText = (text || '').trim();
+  const characterCount = normalizedText.replace(/\s+/g, '').length;
+  const paragraphCount = normalizedText ? normalizedText.split(/\n+/).filter(Boolean).length : 0;
+  contentStats.textContent = `字数：${characterCount} · 段落：${paragraphCount}`;
+}
+
 // 将当前 UI 状态同步到预览
 function updatePreview() {
   // 文本内容
   const text = inputText.value || '在左侧输入你的内容，右侧将实时更新预览。';
   contentText.textContent = text;
+  updateContentStats(text);
 
   // 字体系列
   const family = fontFamily.value;
@@ -237,6 +270,7 @@ function applyTemplate(templateClass) {
   }
   
   captureArea.classList.add(templateClass);
+  updateTemplateSelector(templateClass);
 }
 
 // 处理 Logo 上传
@@ -490,4 +524,13 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     showNotification('快捷键：Ctrl+S 生成图片，Ctrl+Shift+C 复制，Ctrl+Shift+R 重置', 'info');
   }, 1000);
+});
+
+templateChips.forEach((chip) => {
+  chip.addEventListener('click', () => {
+    const nextTemplate = chip.dataset.template;
+    templateSel.value = nextTemplate;
+    applyTemplate(nextTemplate);
+    updatePreview();
+  });
 });
