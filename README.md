@@ -78,6 +78,17 @@
    - 右侧实时查看效果
    - 点击"生成图片并下载"或使用快捷键 Ctrl+S
 
+## ⚡ 3秒上手（最短路径）
+
+如果你只想快速出图，按这 4 步即可：
+
+1. 粘贴内容到左侧文本框。
+2. 模板先选 **“默认”** 或 **“VSCode风格”**。
+3. 导出倍率选 **2x**（清晰度和体积平衡）。
+4. 点击 **“生成图片并下载”**。
+
+> 小建议：中文长文优先用 Inter / 20px 左右，阅读性更稳定。
+
 ## 🎮 使用技巧
 
 ### 快捷键
@@ -128,10 +139,22 @@ function applyCustomTemplate(name, config) {
 
 - **推荐**: Chrome/Edge 90+, Safari 14+, Firefox 88+
 - **最低**: 支持ES6、CSS Grid、Flexbox的现代浏览器
-- **特殊功能**: 
+- **特殊功能**:
   - 剪贴板API需要HTTPS环境
   - 全屏API需要用户手势触发
   - 导出功能依赖html2canvas库
+
+## 🚢 部署建议
+
+### GitHub Pages
+1. 将仓库推送到 GitHub。
+2. 打开仓库设置 `Settings -> Pages`。
+3. Source 选择 `Deploy from a branch`，分支选 `main`（或你的默认分支），目录选 `/ (root)`。
+4. 保存后等待 1~2 分钟即可获得线上访问地址。
+
+### Vercel / Netlify
+- 这是纯静态项目，无需构建命令。
+- 发布目录直接设置为仓库根目录即可。
 
 ## 🔒 隐私保护
 
@@ -154,6 +177,10 @@ function applyCustomTemplate(name, config) {
 - **代码改进**: 性能优化、代码规范等
 
 ## 🆕 更新日志
+
+### v2.0.1 (2026-02-10)
+- 📝 更新 README 文档结构，补充快速上手说明
+- 🚢 新增部署建议（GitHub Pages / Vercel / Netlify）
 
 ### v2.0.0 (2024-08-01)
 - 🎨 全新UI设计，现代化界面
