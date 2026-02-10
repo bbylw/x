@@ -101,6 +101,17 @@
                         <option value="template-terminal">VSCode风格</option>
                     </select>
                 </div>
+
+                <div id="template-gallery" class="template-gallery" role="radiogroup" aria-label="模板快捷选择">
+                    <button class="template-chip" type="button" data-template="template-default">默认</button>
+                    <button class="template-chip" type="button" data-template="template-code">代码风</button>
+                    <button class="template-chip" type="button" data-template="template-letter">信纸风</button>
+                    <button class="template-chip" type="button" data-template="template-neon">霓虹渐变</button>
+                    <button class="template-chip" type="button" data-template="template-magazine">杂志报头</button>
+                    <button class="template-chip" type="button" data-template="template-sticky">卡片便签</button>
+                    <button class="template-chip" type="button" data-template="template-glass">玻璃拟态</button>
+                    <button class="template-chip" type="button" data-template="template-terminal">VSCode风格</button>
+                </div>
             </section>
 
             <!-- 高级设置 -->
@@ -145,6 +156,7 @@
             <div class="preview-toolbar">
                 <div class="toolbar-left">
                     <h2>📱 实时预览</h2>
+                    <p id="template-status" class="template-status">当前模板：默认</p>
                 </div>
                 <div class="toolbar-right">
                     <button id="fullscreen-btn" class="icon-btn" title="全屏预览">
@@ -195,6 +207,7 @@
                 
                 <div class="export-info">
                     <span id="image-dimensions">预计尺寸：2880 × 1620px</span>
+                    <span id="content-stats">字数：0 · 段落：0</span>
                 </div>
             </div>
         </main>
