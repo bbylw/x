@@ -1294,6 +1294,134 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
 .template-handwritten .brand-name { color: #5d4037; font-family: 'Ma Shan Zheng', 'Long Cang', cursive; font-size: 15px; }
 .template-handwritten .brand-right .brand-mark { color: #8d6e63; font-family: 'Ma Shan Zheng', 'Long Cang', cursive; font-size: 13px; }
 
+/* --- Realism upgrade (all templates) --- */
+.template-default,
+.template-minimal,
+.template-code,
+.template-letter,
+.template-neon,
+.template-magazine,
+.template-sticky,
+.template-glass,
+.template-terminal,
+.template-cyberpunk,
+.template-newspaper,
+.template-handwritten {
+  isolation: isolate;
+}
+
+.template-default {
+  box-shadow: 0 22px 50px rgba(15, 23, 42, .16), 0 1px 0 rgba(255,255,255,.8) inset;
+}
+.template-default .content-wrap {
+  background-image:
+    radial-gradient(circle at 2px 2px, rgba(148,163,184,.08) 0.8px, transparent 0.9px);
+  background-size: 3px 3px;
+}
+
+.template-minimal {
+  box-shadow: 0 18px 40px rgba(17, 24, 39, .08), 0 1px 0 rgba(255,255,255,.9) inset;
+}
+.template-minimal .content-wrap {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.88) 0%, rgba(249,250,251,.72) 100%),
+    radial-gradient(circle at 1px 1px, rgba(31,41,55,.04) 0.7px, transparent 1px);
+  background-size: auto, 3px 3px;
+  border-radius: 14px;
+}
+
+.template-code .content-wrap {
+  background-image:
+    linear-gradient(180deg, rgba(13,17,23,.25) 0%, rgba(13,17,23,.05) 100%),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 26px, rgba(139,148,158,.08) 26px, rgba(139,148,158,.08) 27px);
+}
+.template-code .content-wrap::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 72px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f85149 0 33%, #e3b341 33% 66%, #3fb950 66% 100%);
+  opacity: .7;
+}
+
+.template-letter .content-wrap {
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.24) 100%),
+    radial-gradient(circle at 1px 1px, rgba(120,53,15,.06) .8px, transparent 1px);
+  background-size: auto, 4px 4px;
+  box-shadow: 0 10px 24px rgba(120,53,15,.08);
+}
+
+.template-neon {
+  box-shadow: 0 0 0 1px rgba(94,234,212,.28), 0 20px 45px rgba(2,6,23,.5), 0 0 80px rgba(94,234,212,.08);
+}
+.template-neon .content-wrap {
+  border: 1px solid rgba(94,234,212,.16);
+  box-shadow: inset 0 0 30px rgba(94,234,212,.05), 0 8px 30px rgba(2,6,23,.35);
+}
+
+.template-magazine .content-wrap {
+  box-shadow: 0 12px 26px rgba(15,23,42,.18);
+  border: 1px solid rgba(15,23,42,.12);
+}
+.template-magazine .content-wrap::after {
+  opacity: .82;
+  filter: contrast(105%);
+}
+
+.template-sticky {
+  box-shadow: 0 18px 35px rgba(120,53,15,.16), 0 2px 0 rgba(255,255,255,.45) inset;
+}
+.template-sticky .content-wrap {
+  filter: saturate(105%);
+  box-shadow: 0 12px 20px rgba(146,64,14,.14), 0 1px 0 rgba(255,255,255,.5) inset;
+}
+
+.template-glass .content-wrap {
+  backdrop-filter: blur(22px) saturate(130%);
+  -webkit-backdrop-filter: blur(22px) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 16px 30px rgba(2,6,23,.32);
+}
+
+.template-terminal .content-wrap {
+  box-shadow: 0 8px 24px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.template-terminal .content-text {
+  text-shadow: 0 1px 0 rgba(0,0,0,.5);
+}
+
+.template-cyberpunk {
+  box-shadow: 0 0 0 1px rgba(255,0,128,.35), 0 18px 45px rgba(10,10,10,.75), 0 0 120px rgba(0,255,255,.08);
+}
+.template-cyberpunk .content-wrap {
+  background-image:
+    linear-gradient(180deg, rgba(255,0,128,.05) 0%, transparent 35%),
+    repeating-linear-gradient(90deg, rgba(0,255,255,.03) 0px, rgba(0,255,255,.03) 1px, transparent 1px, transparent 6px);
+}
+
+.template-newspaper {
+  box-shadow: 0 18px 36px rgba(51, 39, 25, .2), 0 1px 0 rgba(255,255,255,.5) inset;
+}
+.template-newspaper .content-wrap {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(41,37,36,.07) .8px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+.template-handwritten .content-wrap {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.06) 100%),
+    radial-gradient(circle at 1px 1px, rgba(15,23,42,.05) .8px, transparent 1px);
+  background-size: auto, 4px 4px;
+  border-radius: 10px;
+}
+.template-handwritten .content-text {
+  filter: saturate(112%);
+}
+
 /* ========= Generating State ========= */
 .generating { cursor: wait; }
 .generating * { pointer-events: none; }
