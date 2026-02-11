@@ -47,6 +47,14 @@ const TEMPLATES = [
   'template-terminal', 'template-cyberpunk', 'template-newspaper', 'template-handwritten'
 ];
 
+const HANDWRITING_FONTS = [
+  "'Ma Shan Zheng', cursive",
+  "'Long Cang', cursive",
+  "'Zhi Mang Xing', cursive",
+  "'Liu Jian Mao Cao', cursive",
+  "'ZCOOL XiaoWei', cursive"
+];
+
 let settings = {
   fontSize: 20,
   lineHeight: 1.7,
@@ -201,6 +209,12 @@ function applyTemplate(templateClass) {
 
   captureArea.classList.add(templateClass);
   setActiveTemplate(templateClass);
+}
+
+function switchToHandwritingFont() {
+  const currentIndex = HANDWRITING_FONTS.indexOf(fontFamily.value);
+  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % HANDWRITING_FONTS.length : 0;
+  fontFamily.value = HANDWRITING_FONTS[nextIndex];
 }
 
 function updatePreview() {
@@ -401,6 +415,11 @@ templateGrid.addEventListener('click', (e) => {
   const item = e.target.closest('.template-item');
   if (!item) return;
   const tmpl = item.dataset.template;
+
+  if (tmpl === 'template-handwritten') {
+    switchToHandwritingFont();
+  }
+
   settings.template = tmpl;
   applyTemplate(tmpl);
   updatePreview();
