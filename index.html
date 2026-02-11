@@ -1,324 +1,674 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
-
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="将长文本排版为高颜值社媒分享图片，支持12套精美模板、实时预览、高清导出" />
-    <meta name="theme-color" content="#0969da" />
-    <meta property="og:title" content="长文转社媒分享图" />
-    <meta property="og:description" content="将长文本排版为高颜值社媒分享图片" />
-    <title>TextCard — 长文转社媒分享图</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
-    <!-- Google Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&family=Lora:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800;900&family=Ma+Shan+Zheng&family=Long+Cang&family=Zhi+Mang+Xing&family=Liu+Jian+Mao+Cao&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <!-- App CSS -->
-    <link rel="stylesheet" href="styles.css">
-    <!-- html2canvas CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
-    <!-- App JS -->
-    <script src="app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextCard - 长文转长图</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Space+Mono:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'display': ['Playfair Display', 'Noto Serif SC', 'serif'],
+                        'serif': ['Crimson Text', 'Noto Serif SC', 'serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        'brand': {
+                            50: '#faf7f2',
+                            100: '#f0ebe0',
+                            200: '#e0d5c4',
+                            300: '#c9b89d',
+                            400: '#b19a74',
+                            500: '#9d8159',
+                            600: '#8a6d4c',
+                            700: '#735840',
+                            800: '#5f4a38',
+                            900: '#4f3e30',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+        .preview-card {
+            font-family: 'Noto Serif SC', 'Crimson Text', serif;
+        }
+        
+        .preview-card h1 {
+            font-family: 'Playfair Display', 'Noto Serif SC', serif;
+        }
+
+        .template-minimal { --card-bg: #ffffff; --card-text: #1a1a1a; --card-accent: #2d2d2d; }
+        .template-dark { --card-bg: #0f0f0f; --card-text: #e8e8e8; --card-accent: #ffffff; }
+        .template-business { --card-bg: #f8f9fa; --card-text: #1e3a5f; --card-accent: #0d47a1; }
+        .template-artistic { --card-bg: #fef9f3; --card-text: #3d2914; --card-accent: #8b4513; }
+        .template-tech { --card-bg: #0a0e14; --card-text: #b3b1ad; --card-accent: #39bae6; }
+
+        .noise-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+        input[type="range"]::-webkit-slider-track {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #1f2937;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #1f2937;
+            color: #1f2937;
+        }
+
+        .export-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .template-btn {
+            transition: all 0.2s ease;
+        }
+        .template-btn:hover {
+            transform: scale(1.02);
+        }
+        .template-btn.active {
+            ring: 2px solid #1f2937;
+        }
+
+        .preview-content p { margin-bottom: 1em; }
+        .preview-content h1 { margin-bottom: 0.5em; }
+        .preview-content h2 { margin-bottom: 0.5em; }
+        .preview-content ul, .preview-content ol { margin-left: 1.5em; margin-bottom: 1em; }
+        .preview-content li { margin-bottom: 0.25em; }
+        .preview-content code {
+            background: rgba(0,0,0,0.1);
+            padding: 0.125em 0.375em;
+            border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9em;
+        }
+        .preview-content pre {
+            background: rgba(0,0,0,0.05);
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+        }
+        .preview-content pre code {
+            background: transparent;
+            padding: 0;
+        }
+        .preview-content blockquote {
+            border-left: 3px solid currentColor;
+            padding-left: 1em;
+            margin: 1em 0;
+            opacity: 0.8;
+            font-style: italic;
+        }
+    </style>
 </head>
+<body class="bg-brand-50 min-h-screen">
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-brand-200 rounded-full blur-3xl opacity-40"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-brand-300 rounded-full blur-3xl opacity-30"></div>
+    </div>
 
-<body>
-    <div class="container">
-        <!-- 左侧控制面板 -->
-        <aside class="sidebar" aria-label="控制面板">
-            <div class="sidebar-header">
-                <h1 class="app-title">
-                    <svg class="app-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <line x1="10" y1="9" x2="8" y2="9"/>
-                    </svg>
-                    TextCard
-                </h1>
-                <button id="theme-toggle" class="icon-btn" title="切换主题">
-                    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- 文本输入 -->
-            <section class="panel-group">
-                <label class="panel-label" for="input-text">
-                    输入/粘贴内容
-                    <span id="char-count" class="char-count">0 字</span>
-                </label>
-                <textarea id="input-text" class="text-input" placeholder="在此粘贴你的长文内容…&#10;&#10;支持直接拖拽文本文件到此处"></textarea>
-            </section>
-
-            <!-- 排版控件 -->
-            <section class="panel-group">
-                <h2 class="group-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    排版
-                </h2>
-
-                <div class="field">
-                    <label for="font-family">字体</label>
-                    <select id="font-family">
-                        <option value="Inter, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans SC, Arial, sans-serif">
-                            Inter（无衬线）</option>
-                        <option value="'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                            Fira Code（等宽）</option>
-                        <option value="Lora, Georgia, 'Times New Roman', Times, serif">Lora（衬线）</option>
-                        <option value="'Playfair Display', Georgia, 'Times New Roman', serif">Playfair Display（优雅衬线）</option>
-                        <option value="'Noto Serif SC', 'Songti SC', STSong, serif">思源宋体（中文衬线）</option>
-                        <option value="'Ma Shan Zheng', cursive">马山正（毛笔楷书）</option>
-                        <option value="'Long Cang', cursive">龙藏（随性手写）</option>
-                        <option value="'Zhi Mang Xing', cursive">志莽行（行书）</option>
-                        <option value="'Liu Jian Mao Cao', cursive">柳建茅草（草书）</option>
-                        <option value="'ZCOOL XiaoWei', cursive">站酷小薇（手写钢笔）</option>
-                    </select>
-                </div>
-
-                <div class="field range-field">
-                    <label for="font-size">字号</label>
-                    <input type="range" id="font-size" min="14" max="36" value="20" step="1">
-                    <span id="font-size-val" class="range-value">20px</span>
-                </div>
-
-                <div class="field range-field">
-                    <label for="line-height">行间距</label>
-                    <input type="range" id="line-height" min="1.2" max="2.2" value="1.7" step="0.05">
-                    <span id="line-height-val" class="range-value">1.7</span>
-                </div>
-
-                <div class="field">
-                    <label for="text-align">文字对齐</label>
-                    <div class="align-group">
-                        <button class="align-btn active" data-align="left" title="左对齐">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
-                        </button>
-                        <button class="align-btn" data-align="center" title="居中">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="18" y1="18" x2="6" y2="18"/></svg>
-                        </button>
-                        <button class="align-btn" data-align="justify" title="两端对齐">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="field colors">
-                    <div>
-                        <label for="text-color">文字颜色</label>
-                        <input type="color" id="text-color" value="#111111">
+    <div class="relative z-10 min-h-screen">
+        <header class="glass-panel border-b border-brand-200/50 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-brand-600 to-brand-800 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
                     </div>
                     <div>
-                        <label for="bg-color">背景颜色</label>
-                        <input type="color" id="bg-color" value="#ffffff">
+                        <h1 class="font-display text-xl font-semibold text-gray-900">TextCard</h1>
+                        <p class="text-xs text-gray-500">长文转长图 · 一键发布</p>
                     </div>
                 </div>
-            </section>
-
-            <!-- 品牌控件 -->
-            <section class="panel-group">
-                <h2 class="group-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                    品牌
-                </h2>
-
-                <div class="field">
-                    <label for="logo-upload">上传 Logo</label>
-                    <input type="file" id="logo-upload" accept="image/*">
-                </div>
-
-                <div class="field">
-                    <label for="x-username">X 用户名</label>
-                    <input id="x-username" type="text" placeholder="@your_handle">
-                </div>
-
-                <div class="field checkbox-field">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="show-watermark" checked>
-                        <span>显示底部品牌栏</span>
-                    </label>
-                </div>
-            </section>
-
-            <!-- 模板选择 -->
-            <section class="panel-group">
-                <h2 class="group-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    模板
-                </h2>
-                <div class="template-grid" id="template-grid">
-                    <button class="template-item active" data-template="template-default">
-                        <span class="template-preview tp-default"></span>
-                        <span class="template-name">默认</span>
-                    </button>
-                    <button class="template-item" data-template="template-minimal">
-                        <span class="template-preview tp-minimal"></span>
-                        <span class="template-name">极简白</span>
-                    </button>
-                    <button class="template-item" data-template="template-code">
-                        <span class="template-preview tp-code"></span>
-                        <span class="template-name">代码风</span>
-                    </button>
-                    <button class="template-item" data-template="template-letter">
-                        <span class="template-preview tp-letter"></span>
-                        <span class="template-name">信纸风</span>
-                    </button>
-                    <button class="template-item" data-template="template-neon">
-                        <span class="template-preview tp-neon"></span>
-                        <span class="template-name">霓虹渐变</span>
-                    </button>
-                    <button class="template-item" data-template="template-magazine">
-                        <span class="template-preview tp-magazine"></span>
-                        <span class="template-name">杂志报头</span>
-                    </button>
-                    <button class="template-item" data-template="template-sticky">
-                        <span class="template-preview tp-sticky"></span>
-                        <span class="template-name">卡片便签</span>
-                    </button>
-                    <button class="template-item" data-template="template-glass">
-                        <span class="template-preview tp-glass"></span>
-                        <span class="template-name">玻璃拟态</span>
-                    </button>
-                    <button class="template-item" data-template="template-terminal">
-                        <span class="template-preview tp-terminal"></span>
-                        <span class="template-name">VSCode</span>
-                    </button>
-                    <button class="template-item" data-template="template-cyberpunk">
-                        <span class="template-preview tp-cyberpunk"></span>
-                        <span class="template-name">赛博朋克</span>
-                    </button>
-                    <button class="template-item" data-template="template-newspaper">
-                        <span class="template-preview tp-newspaper"></span>
-                        <span class="template-name">报纸</span>
-                    </button>
-                    <button class="template-item" data-template="template-handwritten">
-                        <span class="template-preview tp-handwritten"></span>
-                        <span class="template-name">手写体</span>
+                <div class="flex items-center gap-4">
+                    <span id="charCount" class="text-sm text-gray-500">0 字</span>
+                    <button onclick="showHelp()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
                     </button>
                 </div>
-            </section>
+            </div>
+        </header>
 
-            <!-- 高级设置 -->
-            <section class="panel-group collapsible">
-                <h2 class="group-title group-toggle" id="advanced-toggle">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    高级设置
-                    <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </h2>
-                <div class="collapsible-content" id="advanced-content">
-                    <div class="field range-field">
-                        <label for="card-width">卡片宽度</label>
-                        <input type="range" id="card-width" min="600" max="1200" value="960" step="20">
-                        <span id="card-width-val" class="range-value">960px</span>
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-6 animate-fade-in-up">
+                    <div class="glass-panel rounded-2xl border border-brand-200/50 overflow-hidden">
+                        <div class="border-b border-brand-200/50 px-6 py-4">
+                            <div class="flex items-center gap-6">
+                                <button onclick="switchTab('content')" id="tab-content" class="text-sm font-medium pb-2 tab-active">内容编辑</button>
+                                <button onclick="switchTab('style')" id="tab-style" class="text-sm font-medium pb-2 text-gray-400 hover:text-gray-600 transition-colors">样式设置</button>
+                                <button onclick="switchTab('watermark')" id="tab-watermark" class="text-sm font-medium pb-2 text-gray-400 hover:text-gray-600 transition-colors">水印</button>
+                            </div>
+                        </div>
+
+                        <div id="panel-content" class="p-6">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">标题（可选）</label>
+                                <input type="text" id="titleInput" placeholder="输入标题，留空则自动提取首行" 
+                                    class="w-full px-4 py-3 bg-white/50 border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">正文内容</label>
+                                <textarea id="contentInput" rows="12" placeholder="在此输入或粘贴您的长文内容...&#10;&#10;支持 Markdown 语法：&#10;# 标题&#10;**加粗** *斜体*&#10;- 列表项&#10;> 引用&#10;`代码`"
+                                    class="w-full px-4 py-3 bg-white/50 border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all text-gray-800 placeholder-gray-400 resize-none custom-scrollbar"></textarea>
+                            </div>
+                            <div class="mt-4 flex items-center gap-2">
+                                <input type="checkbox" id="markdownToggle" class="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                                <label for="markdownToggle" class="text-sm text-gray-600">启用 Markdown 解析</label>
+                            </div>
+                        </div>
+
+                        <div id="panel-style" class="p-6 hidden">
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">选择模板</label>
+                                <div class="grid grid-cols-5 gap-3">
+                                    <button onclick="selectTemplate('minimal')" class="template-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-400 transition-all" data-template="minimal">
+                                        <div class="absolute inset-0 bg-white"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-gray-800">简约</span>
+                                        </div>
+                                    </button>
+                                    <button onclick="selectTemplate('dark')" class="template-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-400 transition-all" data-template="dark">
+                                        <div class="absolute inset-0 bg-gray-900"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-white">暗黑</span>
+                                        </div>
+                                    </button>
+                                    <button onclick="selectTemplate('business')" class="template-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-400 transition-all" data-template="business">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-slate-100"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-blue-900">商务</span>
+                                        </div>
+                                    </button>
+                                    <button onclick="selectTemplate('artistic')" class="template-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-400 transition-all" data-template="artistic">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-amber-900">文艺</span>
+                                        </div>
+                                    </button>
+                                    <button onclick="selectTemplate('tech')" class="template-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-400 transition-all" data-template="tech">
+                                        <div class="absolute inset-0 bg-slate-900"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-cyan-400">科技</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-5">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-sm font-medium text-gray-700">字体大小</label>
+                                        <span id="fontSizeValue" class="text-sm text-gray-500">18px</span>
+                                    </div>
+                                    <input type="range" id="fontSize" min="14" max="28" value="18" class="w-full" oninput="updateStyle()">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-sm font-medium text-gray-700">行间距</label>
+                                        <span id="lineHeightValue" class="text-sm text-gray-500">1.8</span>
+                                    </div>
+                                    <input type="range" id="lineHeight" min="1.4" max="2.4" step="0.1" value="1.8" class="w-full" oninput="updateStyle()">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-sm font-medium text-gray-700">内边距</label>
+                                        <span id="paddingValue" class="text-sm text-gray-500">48px</span>
+                                    </div>
+                                    <input type="range" id="cardPadding" min="24" max="80" value="48" class="w-full" oninput="updateStyle()">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-sm font-medium text-gray-700">圆角</label>
+                                        <span id="borderRadiusValue" class="text-sm text-gray-500">16px</span>
+                                    </div>
+                                    <input type="range" id="borderRadius" min="0" max="32" value="16" class="w-full" oninput="updateStyle()">
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">背景样式</label>
+                                <div class="grid grid-cols-6 gap-2">
+                                    <button onclick="selectBg('solid')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="solid">
+                                        <div class="w-full h-full bg-white"></div>
+                                    </button>
+                                    <button onclick="selectBg('gradient1')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="gradient1">
+                                        <div class="w-full h-full bg-gradient-to-br from-pink-100 to-purple-100"></div>
+                                    </button>
+                                    <button onclick="selectBg('gradient2')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="gradient2">
+                                        <div class="w-full h-full bg-gradient-to-br from-blue-100 to-cyan-100"></div>
+                                    </button>
+                                    <button onclick="selectBg('gradient3')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="gradient3">
+                                        <div class="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100"></div>
+                                    </button>
+                                    <button onclick="selectBg('texture1')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="texture1">
+                                        <div class="w-full h-full bg-gray-100" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'1\' cy=\'1\' r=\'1\' fill=\'%23ccc\'/%3E%3C/svg%3E');"></div>
+                                    </button>
+                                    <button onclick="selectBg('texture2')" class="bg-btn aspect-square rounded-lg border-2 border-gray-200 hover:border-brand-400 transition-all overflow-hidden" data-bg="texture2">
+                                        <div class="w-full h-full bg-slate-100" style="background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%); background-size: 10px 10px;"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="panel-watermark" class="p-6 hidden">
+                            <div class="flex items-center justify-between mb-4">
+                                <label class="text-sm font-medium text-gray-700">启用水印</label>
+                                <button onclick="toggleWatermark()" id="watermarkToggle" class="relative w-12 h-6 bg-gray-200 rounded-full transition-colors">
+                                    <span id="watermarkToggleKnob" class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform"></span>
+                                </button>
+                            </div>
+                            <div id="watermarkSettings" class="space-y-4 opacity-50 pointer-events-none transition-opacity">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">水印文字</label>
+                                    <input type="text" id="watermarkText" placeholder="@your_username" 
+                                        class="w-full px-4 py-3 bg-white/50 border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all text-gray-800 placeholder-gray-400">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">水印位置</label>
+                                    <select id="watermarkPosition" class="w-full px-4 py-3 bg-white/50 border border-brand-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition-all text-gray-800">
+                                        <option value="bottom-right">右下角</option>
+                                        <option value="bottom-left">左下角</option>
+                                        <option value="bottom-center">底部居中</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="text-sm font-medium text-gray-700">水印透明度</label>
+                                        <span id="watermarkOpacityValue" class="text-sm text-gray-500">50%</span>
+                                    </div>
+                                    <input type="range" id="watermarkOpacity" min="20" max="80" value="50" class="w-full" oninput="updateWatermarkOpacity()">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="field range-field">
-                        <label for="content-padding">内边距</label>
-                        <input type="range" id="content-padding" min="16" max="64" value="32" step="4">
-                        <span id="content-padding-val" class="range-value">32px</span>
-                    </div>
-
-                    <div class="field range-field">
-                        <label for="letter-spacing">字间距</label>
-                        <input type="range" id="letter-spacing" min="-0.05" max="0.2" value="0" step="0.01">
-                        <span id="letter-spacing-val" class="range-value">0em</span>
-                    </div>
-                    
-                    <div class="field">
-                        <button id="reset-btn" class="secondary-btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                            重置所有设置
+                    <div class="glass-panel rounded-2xl border border-brand-200/50 p-6">
+                        <h3 class="text-sm font-medium text-gray-700 mb-4">导出设置</h3>
+                        <div class="flex items-center gap-4 mb-4">
+                            <label class="text-sm text-gray-600">格式：</label>
+                            <div class="flex gap-2">
+                                <button onclick="selectFormat('png')" id="format-png" class="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white transition-all">PNG</button>
+                                <button onclick="selectFormat('jpg')" id="format-jpg" class="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">JPG</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 mb-6">
+                            <label class="text-sm text-gray-600">清晰度：</label>
+                            <div class="flex gap-2">
+                                <button onclick="selectScale(1)" id="scale-1" class="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">1x</button>
+                                <button onclick="selectScale(2)" id="scale-2" class="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white transition-all">2x</button>
+                                <button onclick="selectScale(3)" id="scale-3" class="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">3x</button>
+                            </div>
+                        </div>
+                        <button onclick="exportImage()" class="export-btn w-full py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white font-medium rounded-xl flex items-center justify-center gap-2 hover:from-brand-700 hover:to-brand-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            导出图片
                         </button>
                     </div>
                 </div>
-            </section>
 
-            <!-- 生成按钮 -->
-            <section class="panel-group action-group">
-                <button id="generate-btn" class="primary-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span>生成图片并下载</span>
-                </button>
-                <button id="copy-btn" class="secondary-btn action-secondary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    <span>复制到剪贴板</span>
-                </button>
-            </section>
-
-            <footer class="tip">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <span>Ctrl+S 生成 · Ctrl+Shift+C 复制 · Ctrl+Shift+R 重置</span>
-            </footer>
-        </aside>
-
-        <!-- 右侧实时预览 -->
-        <main class="preview-area" aria-label="实时预览">
-            <!-- 预览工具栏 -->
-            <div class="preview-toolbar">
-                <div class="toolbar-left">
-                    <h2>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        实时预览
-                    </h2>
-                </div>
-                <div class="toolbar-right">
-                    <button id="fullscreen-btn" class="icon-btn" title="全屏预览">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                    </button>
-                    <button id="zoom-fit-btn" class="icon-btn" title="适应窗口">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"/><line x1="9" y1="2" x2="9" y2="22"/></svg>
-                    </button>
-                </div>
-            </div>
-
-            <div class="preview-card">
-                <!-- 可捕获区域 -->
-                <div id="capture-area" class="template-default">
-                    <div class="content-wrap">
-                        <div id="content-text" class="content-text">
-                            在左侧输入你的内容，右侧将实时更新预览。
+                <div class="animate-fade-in-up" style="animation-delay: 100ms;">
+                    <div class="sticky top-28">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-sm font-medium text-gray-700">实时预览</h2>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse-soft"></div>
+                                自动更新
+                            </div>
+                        </div>
+                        <div class="bg-brand-100/50 rounded-2xl p-6 border border-brand-200/50 overflow-auto max-h-[calc(100vh-200px)] custom-scrollbar">
+                            <div id="previewContainer" class="mx-auto transition-all duration-300">
+                                <div id="previewCard" class="preview-card template-minimal relative overflow-hidden" style="width: 400px; background: var(--card-bg); color: var(--card-text); border-radius: 16px; padding: 48px;">
+                                    <div class="noise-overlay absolute inset-0 pointer-events-none"></div>
+                                    <div class="relative z-10">
+                                        <h1 id="previewTitle" class="text-2xl font-bold mb-6" style="color: var(--card-accent);"></h1>
+                                        <div id="previewContent" class="preview-content text-base leading-relaxed opacity-90"></div>
+                                        <div id="previewWatermark" class="hidden absolute bottom-4 right-4 text-xs opacity-50"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="brand-footer" id="brand-footer">
-                        <div class="brand-left">
-                            <img id="brand-logo" class="brand-logo" alt="品牌Logo" />
-                            <span id="brand-name" class="brand-name">@your_handle</span>
-                        </div>
-                        <div class="brand-right">
-                            <span class="brand-mark">Share · Create · Inspire</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 导出参数 -->
-            <div class="export-controls">
-                <div class="export-row">
-                    <label for="export-scale">导出倍率</label>
-                    <input type="range" id="export-scale" min="1" max="4" step="1" value="3">
-                    <span id="export-scale-val" class="range-value">3x</span>
-                </div>
-                
-                <div class="export-row">
-                    <label for="export-format">导出格式</label>
-                    <select id="export-format">
-                        <option value="png">PNG（推荐）</option>
-                        <option value="jpeg">JPEG</option>
-                        <option value="webp">WebP</option>
-                    </select>
-                </div>
-                
-                <div class="export-info">
-                    <span id="image-dimensions">预计尺寸：2880 × —px</span>
                 </div>
             </div>
         </main>
     </div>
-</body>
 
+    <div id="helpModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="hideHelp()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl p-8 shadow-2xl">
+            <h2 class="font-display text-2xl font-semibold mb-4">使用帮助</h2>
+            <div class="space-y-4 text-gray-600">
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-1">基础用法</h3>
+                    <p class="text-sm">在左侧输入标题和正文内容，右侧会实时预览效果。选择喜欢的模板样式，调整字体大小和间距，最后点击导出即可。</p>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-1">Markdown 支持</h3>
+                    <p class="text-sm">勾选「启用 Markdown 解析」后，支持：# 标题、**加粗**、*斜体*、- 列表、> 引用、`代码` 等语法。</p>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-800 mb-1">导出建议</h3>
+                    <p class="text-sm">推荐使用 2x 清晰度导出，适合大多数社交媒体。PNG 格式支持透明背景，JPG 文件更小。</p>
+                </div>
+            </div>
+            <button onclick="hideHelp()" class="mt-6 w-full py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors">知道了</button>
+        </div>
+    </div>
+
+    <div id="exportingModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-8 shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
+                <span class="text-gray-700 font-medium">正在生成图片...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 'minimal';
+        let currentFormat = 'png';
+        let currentScale = 2;
+        let watermarkEnabled = false;
+        let currentBg = 'solid';
+        let useMarkdown = false;
+
+        const bgStyles = {
+            'solid': 'background: var(--card-bg);',
+            'gradient1': 'background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%);',
+            'gradient2': 'background: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%);',
+            'gradient3': 'background: linear-gradient(135deg, #fef3c7 0%, #ffedd5 100%);',
+            'texture1': 'background: var(--card-bg); background-image: url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'1\' cy=\'1\' r=\'1\' fill=\'%23ccc\'/%3E%3C/svg%3E");',
+            'texture2': 'background: var(--card-bg); background-image: linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,0,0,0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.05) 75%); background-size: 10px 10px;'
+        };
+
+        const templateStyles = {
+            'minimal': { bg: '#ffffff', text: '#1a1a1a', accent: '#2d2d2d' },
+            'dark': { bg: '#0f0f0f', text: '#e8e8e8', accent: '#ffffff' },
+            'business': { bg: '#f8f9fa', text: '#1e3a5f', accent: '#0d47a1' },
+            'artistic': { bg: '#fef9f3', text: '#3d2914', accent: '#8b4513' },
+            'tech': { bg: '#0a0e14', text: '#b3b1ad', accent: '#39bae6' }
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('tab-active');
+                el.classList.add('text-gray-400');
+            });
+            document.querySelectorAll('[id^="panel-"]').forEach(el => el.classList.add('hidden'));
+            
+            document.getElementById(`tab-${tab}`).classList.add('tab-active');
+            document.getElementById(`tab-${tab}`).classList.remove('text-gray-400');
+            document.getElementById(`panel-${tab}`).classList.remove('hidden');
+        }
+
+        function selectTemplate(template) {
+            currentTemplate = template;
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.classList.remove('border-brand-500');
+                btn.classList.add('border-transparent');
+            });
+            document.querySelector(`[data-template="${template}"]`).classList.remove('border-transparent');
+            document.querySelector(`[data-template="${template}"]`).classList.add('border-brand-500');
+            
+            const card = document.getElementById('previewCard');
+            card.classList.remove('template-minimal', 'template-dark', 'template-business', 'template-artistic', 'template-tech');
+            card.classList.add(`template-${template}`);
+            
+            updatePreview();
+        }
+
+        function selectFormat(format) {
+            currentFormat = format;
+            document.getElementById('format-png').className = format === 'png' 
+                ? 'px-4 py-2 text-sm rounded-lg bg-gray-900 text-white transition-all'
+                : 'px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all';
+            document.getElementById('format-jpg').className = format === 'jpg'
+                ? 'px-4 py-2 text-sm rounded-lg bg-gray-900 text-white transition-all'
+                : 'px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all';
+        }
+
+        function selectScale(scale) {
+            currentScale = scale;
+            ['1', '2', '3'].forEach(s => {
+                document.getElementById(`scale-${s}`).className = s == scale
+                    ? 'px-4 py-2 text-sm rounded-lg bg-gray-900 text-white transition-all'
+                    : 'px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all';
+            });
+        }
+
+        function selectBg(bg) {
+            currentBg = bg;
+            document.querySelectorAll('.bg-btn').forEach(btn => {
+                btn.classList.remove('border-brand-500');
+                btn.classList.add('border-gray-200');
+            });
+            document.querySelector(`[data-bg="${bg}"]`).classList.remove('border-gray-200');
+            document.querySelector(`[data-bg="${bg}"]`).classList.add('border-brand-500');
+            updatePreview();
+        }
+
+        function toggleWatermark() {
+            watermarkEnabled = !watermarkEnabled;
+            const toggle = document.getElementById('watermarkToggle');
+            const knob = document.getElementById('watermarkToggleKnob');
+            const settings = document.getElementById('watermarkSettings');
+            
+            if (watermarkEnabled) {
+                toggle.classList.remove('bg-gray-200');
+                toggle.classList.add('bg-brand-600');
+                knob.classList.add('translate-x-6');
+                settings.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                toggle.classList.add('bg-gray-200');
+                toggle.classList.remove('bg-brand-600');
+                knob.classList.remove('translate-x-6');
+                settings.classList.add('opacity-50', 'pointer-events-none');
+            }
+            updatePreview();
+        }
+
+        function updateWatermarkOpacity() {
+            const opacity = document.getElementById('watermarkOpacity').value;
+            document.getElementById('watermarkOpacityValue').textContent = opacity + '%';
+            updatePreview();
+        }
+
+        function updateStyle() {
+            const fontSize = document.getElementById('fontSize').value;
+            const lineHeight = document.getElementById('lineHeight').value;
+            const padding = document.getElementById('cardPadding').value;
+            const borderRadius = document.getElementById('borderRadius').value;
+            
+            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
+            document.getElementById('lineHeightValue').textContent = lineHeight;
+            document.getElementById('paddingValue').textContent = padding + 'px';
+            document.getElementById('borderRadiusValue').textContent = borderRadius + 'px';
+            
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('titleInput').value;
+            let content = document.getElementById('contentInput').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const lineHeight = document.getElementById('lineHeight').value;
+            const padding = document.getElementById('cardPadding').value;
+            const borderRadius = document.getElementById('borderRadius').value;
+            
+            useMarkdown = document.getElementById('markdownToggle').checked;
+            
+            const previewTitle = document.getElementById('previewTitle');
+            const previewContent = document.getElementById('previewContent');
+            const card = document.getElementById('previewCard');
+            
+            if (title) {
+                previewTitle.textContent = title;
+                previewTitle.classList.remove('hidden');
+            } else {
+                const lines = content.split('\n').filter(l => l.trim());
+                if (lines.length > 0) {
+                    previewTitle.textContent = lines[0];
+                    previewTitle.classList.remove('hidden');
+                    content = lines.slice(1).join('\n');
+                } else {
+                    previewTitle.classList.add('hidden');
+                }
+            }
+            
+            if (useMarkdown) {
+                previewContent.innerHTML = marked.parse(content);
+            } else {
+                previewContent.innerHTML = content.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+            }
+            
+            card.style.fontSize = fontSize + 'px';
+            card.style.lineHeight = lineHeight;
+            card.style.padding = padding + 'px';
+            card.style.borderRadius = borderRadius + 'px';
+            
+            const style = templateStyles[currentTemplate];
+            if (currentBg === 'solid') {
+                card.style.background = style.bg;
+            } else {
+                card.style.cssText = card.style.cssText + bgStyles[currentBg];
+            }
+            
+            const watermark = document.getElementById('previewWatermark');
+            if (watermarkEnabled) {
+                const watermarkText = document.getElementById('watermarkText').value || '@username';
+                const watermarkPosition = document.getElementById('watermarkPosition').value;
+                const watermarkOpacity = document.getElementById('watermarkOpacity').value / 100;
+                
+                watermark.textContent = watermarkText;
+                watermark.classList.remove('hidden');
+                watermark.style.opacity = watermarkOpacity;
+                
+                watermark.className = 'absolute text-xs';
+                if (watermarkPosition === 'bottom-right') {
+                    watermark.classList.add('bottom-4', 'right-4');
+                } else if (watermarkPosition === 'bottom-left') {
+                    watermark.classList.add('bottom-4', 'left-4');
+                } else {
+                    watermark.classList.add('bottom-4', 'left-1/2', '-translate-x-1/2');
+                }
+            } else {
+                watermark.classList.add('hidden');
+            }
+            
+            const charCount = document.getElementById('contentInput').value.length + document.getElementById('titleInput').value.length;
+            document.getElementById('charCount').textContent = charCount + ' 字';
+        }
+
+        async function exportImage() {
+            const modal = document.getElementById('exportingModal');
+            modal.classList.remove('hidden');
+            
+            const card = document.getElementById('previewCard');
+            
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: currentScale,
+                    backgroundColor: null,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = `textcard-${Date.now()}.${currentFormat}`;
+                
+                if (currentFormat === 'jpg') {
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                } else {
+                    link.href = canvas.toDataURL('image/png');
+                }
+                
+                link.click();
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('导出失败，请重试');
+            } finally {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function hideHelp() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
+        document.getElementById('titleInput').addEventListener('input', updatePreview);
+        document.getElementById('contentInput').addEventListener('input', updatePreview);
+        document.getElementById('markdownToggle').addEventListener('change', updatePreview);
+        document.getElementById('watermarkText').addEventListener('input', updatePreview);
+        document.getElementById('watermarkPosition').addEventListener('change', updatePreview);
+
+        selectTemplate('minimal');
+        updatePreview();
+    </script>
+</body>
 </html>
