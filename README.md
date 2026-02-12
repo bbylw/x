@@ -2,7 +2,7 @@
 
 把长文一键生成精美长图，方便在 X / 社交媒体发布。
 
-![TextCard Preview](https://via.placeholder.com/800x400?text=TextCard+Preview)
+
 
 ## 功能特性
 
@@ -112,3 +112,4 @@ openclaw/
 ## License
 
 MIT License
+
